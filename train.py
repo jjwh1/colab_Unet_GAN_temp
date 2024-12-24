@@ -121,7 +121,7 @@ def validate_epoch(generator, discriminator, dataloader, device, criterion, writ
 
             g_loss_adv = criterion(discriminator(fake_images),
                                    torch.ones_like(discriminator(fake_images)).to(device))  # Discriminator를 잘 속이는지에 대한 지표(loss)
-            g_loss_pixel = nn.MSELoss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
+            g_loss_pixel = nn.MSELoss()(fake_images*(1-masks), gts*(1-masks)) + 6*nn.L1Loss()(fake_images*masks, gts*masks)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
             g_loss = g_loss_pixel + lambda_adv * g_loss_adv
 
             fake_images = generator(inputs)

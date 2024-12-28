@@ -199,14 +199,14 @@ def main():
     save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Unet_GAN_temp_just_change_D_70x70/db1_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
-    train_image_paths = '/content/dataset/CASIA_Iris_Lamp/reflection_random(50to1.7)_db1_224_trainset'  # List of input image paths
+    train_image_paths = '/content/dataset//reflection_random(50to1.7)_db1_224_trainset'  # List of input image paths
     train_mask_paths = '/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db1_test_layer28_0.3_only_mask_trainset'  # List of mask paths
-    train_gt_paths = "/content/dataset/CASIA_Iris_Lamp/db1_224_for_gt_inpainting_trainset"  # List of ground truth paths
+    train_gt_paths = "/content/dataset//db1_224_for_gt_inpainting_trainset"  # List of ground truth paths
     train_large_mask_paths = "/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db1_test_layer28_0.3_only_mask_large_mask_h2_w2.2_trainset"  # List of ground truth paths
 
-    val_image_paths = '/content/dataset/CASIA_Iris_Lamp/reflection_random(50to1.7)_db1_224_validset'  # List of input image paths
+    val_image_paths = '/content/dataset//reflection_random(50to1.7)_db1_224_validset'  # List of input image paths
     val_mask_paths = '/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db1_test_layer28_0.3_only_mask_validset'  # List of mask paths
-    val_gt_paths = "/content/dataset/CASIA_Iris_Lamp/db1_224_for_gt_inpainting_validset"  # List of ground truth paths
+    val_gt_paths = "/content/dataset//db1_224_for_gt_inpainting_validset"  # List of ground truth paths
     val_large_mask_paths = "/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db1_test_layer28_0.3_only_mask_large_mask_h2_w2.2_validset"  # List of ground truth paths
 
     results_path = os.path.join(save_dir, "metrics.csv")

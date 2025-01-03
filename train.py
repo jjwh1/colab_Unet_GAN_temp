@@ -64,7 +64,7 @@ def train_gan_epoch(generator, discriminator, dataloader, criterion, optimizer_g
         g_loss_adv = criterion(fake_output, torch.ones_like(fake_output).to(device))  # Discriminator를 잘 속이는지에 대한 지표(loss)
         # g_loss_pixel = nn.MSELoss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
 
-        g_loss_pixel = nn.MSELoss()(fake_images*(1-masks), gts*(1-masks)) + 100*nn.L1Loss()(fake_images*masks, gts*masks)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
+        g_loss_pixel = nn.MSELoss()(fake_images*(1-masks), gts*(1-masks)) + 50*nn.MSELoss()(fake_images*masks, gts*masks)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
         g_loss = g_loss_pixel + lambda_adv * g_loss_adv
         g_loss.backward()
         optimizer_g.step()
@@ -126,7 +126,7 @@ def validate_epoch(generator, discriminator, dataloader, device, criterion, writ
                                    torch.ones_like(discriminator(fake_images)).to(device))  # Discriminator를 잘 속이는지에 대한 지표(loss)
             # g_loss_pixel = nn.MSELoss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
 
-            g_loss_pixel = nn.MSELoss()(fake_images*(1-masks), gts*(1-masks)) + 100*nn.L1Loss()(fake_images*masks, gts*masks)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
+            g_loss_pixel = nn.MSELoss()(fake_images*(1-masks), gts*(1-masks)) + 50*nn.MSELoss()(fake_images*masks, gts*masks)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
             g_loss = g_loss_pixel + lambda_adv * g_loss_adv
 
             fake_images = generator(inputs)
@@ -197,7 +197,7 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 def main():
     # Paths
     
-    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Unet_GAN_temp_add_L1_hole_loss_100_D_70x70/db1_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Unet_GAN_temp_add_L2_hole_loss_50/db1_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     train_image_paths = '/content/dataset//reflection_random(50to1.7)_db1_224_trainset'  # List of input image paths
@@ -305,19 +305,20 @@ def main():
 
 
         # Save checkpoint
-        torch.save({
-            "epoch": epoch + 1,
-            "generator_state_dict": generator.state_dict(),
-            "g_loss": g_loss,
-            "g_l2_loss": g_l2_loss,
-            "g_adv_loss": g_adv_loss,
-            "d_loss": d_loss,
+        if epoch >= 200:
+            torch.save({
+                "epoch": epoch + 1,
+                "generator_state_dict": generator.state_dict(),
+                "g_loss": g_loss,
+                "g_l2_loss": g_l2_loss,
+                "g_adv_loss": g_adv_loss,
+                "d_loss": d_loss,
 
-            "discriminator_state_dict": discriminator.state_dict(),
-            "optimizer_g_state_dict": optimizer_g.state_dict(),
-            "optimizer_d_state_dict": optimizer_d.state_dict()
+                "discriminator_state_dict": discriminator.state_dict(),
+                "optimizer_g_state_dict": optimizer_g.state_dict(),
+                "optimizer_d_state_dict": optimizer_d.state_dict()
 
-        }, os.path.join(save_dir, f"checkpoint_epoch_{epoch + 1}.pth.tar"))
+            }, os.path.join(save_dir, f"checkpoint_epoch_{epoch + 1}.tar"))
 
     writer.close()
 

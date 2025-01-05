@@ -16,7 +16,7 @@ import random
 from torch.utils.tensorboard import SummaryWriter  # TensorBoard
 from datetime import datetime
 import csv
-from convnext.convnext import convnext_small  # [추가]
+from convnext import convnext_small  # [추가]
 
 def seed_everything(seed):
     torch.manual_seed(seed) #torch를 거치는 모든 난수들의 생성순서를 고정한다

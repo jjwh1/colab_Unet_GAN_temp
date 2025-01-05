@@ -235,7 +235,7 @@ def main():
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
 
     # Models
-    generator = UNet_2Plus().to(device)
+    generator = UNet_3Plus().to(device)
     discriminator = Discriminator().to(device)
 
     # Optimizers

@@ -103,4 +103,6 @@ class Discriminator(nn.Module):
     def forward(self, x):
         return self.model(x).view(-1, 1).squeeze(1)  # view까지 한 결과 (Batch * 11 * 11, 1) -> 최종 shape : (Batch * 11 * 11,)
 
-    nn.MaxPool2d(2)
+ 
+
+ 

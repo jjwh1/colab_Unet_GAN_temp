@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
-from Unet3plus_GAN_models import UNet_3Plus, Discriminator
+from models import UNetGenerator, Discriminator
 from dataset import InpaintDataset
 from torchvision import transforms, utils
 from torchmetrics import PeakSignalNoiseRatio, StructuralSimilarityIndexMeasure
@@ -37,13 +37,14 @@ def train_gan_epoch(generator, discriminator, dataloader, criterion, optimizer_g
 
     progress_bar = tqdm(dataloader, desc="Training", leave=False)
 
-    for inputs, gts, masks, _ ,_ ,_ in progress_bar:
-        inputs, gts, masks = inputs.to(device), gts.to(device), masks.to(device)
+    for inputs, gts, masks, _ ,_ ,large_masks in progress_bar:
+        inputs, gts, masks, large_masks = inputs.to(device), gts.to(device), masks.to(device), large_masks.to(device)
 
         # Train Discriminator
         optimizer_d.zero_grad()
         fake_images = generator(inputs)
-        real_output = discriminator(gts) # dis의 output: (batch_size, 1) 형태의 출력 텐서
+        fake_images = fake_images*large_masks
+        real_output = discriminator(gts*large_masks) # dis의 output: (batch_size, 1) 형태의 출력 텐서
         # 네트워크에서 생성된 값이 아니라 데이터셋에서 직접 가져온 Ground Truth 이미지이기 때문에 이 데이터는 모델의 그래디언트 업데이트에 영향을 주는 학습 파라미터와 연결된 계산 그래프에 속하지 않음
         # 따라서, 이미 계산 그래프와 분리되어 있으므로 detach()가 필요하지 않습니다.
         # gts는 외부에서 불러온 이미지 (고정된 것이고, 변하면 안됨)이니 그라디언트 자체가 없음
@@ -62,9 +63,8 @@ def train_gan_epoch(generator, discriminator, dataloader, criterion, optimizer_g
         optimizer_g.zero_grad()
         fake_output = discriminator(fake_images)
         g_loss_adv = criterion(fake_output, torch.ones_like(fake_output).to(device))  # Discriminator를 잘 속이는지에 대한 지표(loss)
-        g_loss_pixel = nn.MSELoss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
+        g_loss_pixel = nn.MSELoss()(fake_images, gts*large_masks)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
 
-        # g_loss_pixel = nn.MSELoss()(fake_images*(1-masks), gts*(1-masks)) + 50*nn.MSELoss()(fake_images*masks, gts*masks)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
         g_loss = g_loss_pixel + lambda_adv * g_loss_adv
         g_loss.backward()
         optimizer_g.step()
@@ -93,17 +93,18 @@ def validate_epoch(generator, discriminator, dataloader, device, criterion, writ
     os.makedirs(epoch_save_dir, exist_ok=True)
 
     with torch.no_grad():
-        for i, (inputs, gts, masks, _, _, _) in enumerate(dataloader):
-            inputs, gts, masks = inputs.to(device), gts.to(device), masks.to(device)
+        for i, (inputs, gts, masks, _, images, large_masks) in enumerate(dataloader):
+            inputs, gts, masks, images, large_masks = inputs.to(device), gts.to(device), masks.to(device), images.to(device), large_masks.to(device)
             fake_images = generator(inputs)
+            fake_images = fake_images*large_masks
 
             # Save a few sample images
 
             if i < 5:  # Save up to 5 sample images per epoch
                 # Convert from -1~1 to 0~1 for saving
                 images = inputs[:, :3, :, :] # concat된 마스크 제외한 input 이미지만
-
-                sample_images = fake_images.clamp(0, 1).cpu().numpy()  # Shape: (B, C, H, W)
+                fake_images1 = fake_images + images*(1-large_masks)
+                sample_images = fake_images1.clamp(0, 1).cpu().numpy()  # Shape: (B, C, H, W)
                 gt_images = gts.clamp(0, 1).cpu().numpy()
                 input_images = images.clamp(0,1).cpu().numpy()  # Use only the first 3 channels for input
 
@@ -124,13 +125,11 @@ def validate_epoch(generator, discriminator, dataloader, device, criterion, writ
 
             g_loss_adv = criterion(discriminator(fake_images),
                                    torch.ones_like(discriminator(fake_images)).to(device))  # Discriminator를 잘 속이는지에 대한 지표(loss)
-            g_loss_pixel = nn.MSELoss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
-
-            # g_loss_pixel = nn.MSELoss()(fake_images*(1-masks), gts*(1-masks)) + 50*nn.MSELoss()(fake_images*masks, gts*masks)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
+            # g_loss_pixel = nn.MSELoss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
+            g_loss_pixel = nn.MSELoss()(fake_images, gts*large_masks)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
             g_loss = g_loss_pixel + lambda_adv * g_loss_adv
 
-            fake_images = generator(inputs)
-            real_output = discriminator(gts)  # dis의 output: (batch_size, 1) 형태의 출력 텐서
+            real_output = discriminator(gts*large_masks)  # dis의 output: (batch_size, 1) 형태의 출력 텐서
             # 네트워크에서 생성된 값이 아니라 데이터셋에서 직접 가져온 Ground Truth 이미지이기 때문에 이 데이터는 모델의 그래디언트 업데이트에 영향을 주는 학습 파라미터와 연결된 계산 그래프에 속하지 않음
             # 따라서, 이미 계산 그래프와 분리되어 있으므로 detach()가 필요하지 않습니다.
             # gts는 외부에서 불러온 이미지 (고정된 것이고, 변하면 안됨)이니 그라디언트 자체가 없음
@@ -197,7 +196,7 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 def main():
     # Paths
     
-    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Unet3plus_GAN_D70x70/db1_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Unet_GAN_temp_just_localD_just_localLoss/db1_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     train_image_paths = '/content/dataset//reflection_random(50to1.7)_db1_224_trainset'  # List of input image paths
@@ -235,7 +234,7 @@ def main():
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
 
     # Models
-    generator = UNet_3Plus().to(device)
+    generator = UNetGenerator().to(device)
     discriminator = Discriminator().to(device)
 
     # Optimizers
@@ -305,7 +304,7 @@ def main():
 
 
         # Save checkpoint
-        if epoch >= 250:
+        if epoch >= 200:
             torch.save({
                 "epoch": epoch + 1,
                 "generator_state_dict": generator.state_dict(),

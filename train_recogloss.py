@@ -147,7 +147,7 @@ def validate_epoch(generator, discriminator, dataloader, device, criterion, writ
 
             g_loss = g_loss_pixel + lambda_adv * g_loss_adv + 0.1 * g_loss_recog
 
-            fake_images = generator(inputs)
+            
             real_output = discriminator(gts)  # dis의 output: (batch_size, 1) 형태의 출력 텐서
             # 네트워크에서 생성된 값이 아니라 데이터셋에서 직접 가져온 Ground Truth 이미지이기 때문에 이 데이터는 모델의 그래디언트 업데이트에 영향을 주는 학습 파라미터와 연결된 계산 그래프에 속하지 않음
             # 따라서, 이미 계산 그래프와 분리되어 있으므로 detach()가 필요하지 않습니다.

@@ -149,8 +149,8 @@ def validate_epoch(generator, discriminator, dataloader, device, criterion, writ
             val_g_l2_loss += g_loss_pixel.item()
             val_g_adv_loss += g_loss_adv.item()
             val_d_loss += d_loss.item()
-            psnr(fake_images, gts)  # 계속 누적됨 (각 배치당 psnr이 누적(배치size로 평균처리)돼서 한 epoch를 채우면 밑에서 compute를 통해 반환)
-            ssim(fake_images, gts)  # 계속 누적됨 (각 배치당 ssim이 누적(배치size로 평균처리)돼서 한 epoch를 채우면 밑에서 compute를 통해 반환)
+            psnr(fake_images, gts*large_masks)  # 계속 누적됨 (각 배치당 psnr이 누적(배치size로 평균처리)돼서 한 epoch를 채우면 밑에서 compute를 통해 반환)
+            ssim(fake_images, gts*large_masks)  # 계속 누적됨 (각 배치당 ssim이 누적(배치size로 평균처리)돼서 한 epoch를 채우면 밑에서 compute를 통해 반환)
 
     val_g_loss /= len(dataloader)
     val_g_l2_loss /= len(dataloader)

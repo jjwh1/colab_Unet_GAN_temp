@@ -62,9 +62,9 @@ def train_gan_epoch(generator, discriminator, dataloader, criterion, optimizer_g
         optimizer_g.zero_grad()
         fake_output = discriminator(fake_images)
         g_loss_adv = criterion(fake_output, torch.ones_like(fake_output).to(device))  # Discriminator를 잘 속이는지에 대한 지표(loss)
-        # g_loss_pixel = nn.MSELoss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
+        g_loss_pixel = nn.MSELoss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
 
-        g_loss_pixel = nn.MSELoss()(fake_images*(1-masks), gts*(1-masks)) + 50*nn.MSELoss()(fake_images*masks, gts*masks)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
+        # g_loss_pixel = nn.MSELoss()(fake_images*(1-masks), gts*(1-masks)) + 50*nn.MSELoss()(fake_images*masks, gts*masks)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
         g_loss = g_loss_pixel + lambda_adv * g_loss_adv
         g_loss.backward()
         optimizer_g.step()
@@ -124,9 +124,9 @@ def validate_epoch(generator, discriminator, dataloader, device, criterion, writ
 
             g_loss_adv = criterion(discriminator(fake_images),
                                    torch.ones_like(discriminator(fake_images)).to(device))  # Discriminator를 잘 속이는지에 대한 지표(loss)
-            # g_loss_pixel = nn.MSELoss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
+            g_loss_pixel = nn.MSELoss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
 
-            g_loss_pixel = nn.MSELoss()(fake_images*(1-masks), gts*(1-masks)) + 50*nn.MSELoss()(fake_images*masks, gts*masks)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
+            # g_loss_pixel = nn.MSELoss()(fake_images*(1-masks), gts*(1-masks)) + 50*nn.MSELoss()(fake_images*masks, gts*masks)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
             g_loss = g_loss_pixel + lambda_adv * g_loss_adv
 
             
@@ -197,7 +197,7 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 def main():
     # Paths
     
-    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Unet_GAN_temp_add_L2_hole_loss_50/db1_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Unet_GAN_temp_just_change_D_70x70_epoch400/db1_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     train_image_paths = '/content/dataset//reflection_random(50to1.7)_db1_224_trainset'  # List of input image paths
@@ -220,7 +220,7 @@ def main():
     # Parameters
     batch_size = 16
     lr = 0.0002
-    num_epochs = 300
+    num_epochs = 400
     lambda_adv = 0.1
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -305,7 +305,7 @@ def main():
 
 
         # Save checkpoint
-        if epoch >= 200:
+        if epoch >= 350:
             torch.save({
                 "epoch": epoch + 1,
                 "generator_state_dict": generator.state_dict(),

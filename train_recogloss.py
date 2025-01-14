@@ -109,7 +109,7 @@ def validate_epoch(generator, discriminator, dataloader, device, criterion, writ
     os.makedirs(epoch_save_dir, exist_ok=True)
 
     with torch.no_grad():
-        for i, (inputs, gts, masks, _, _, _) in enumerate(dataloader):
+        for i, (inputs, gts, masks, filenames, _, _) in enumerate(dataloader):
             batch_size = inputs.size(0)  # 현재 배치 크기
             total_samples += batch_size  # 전체 샘플 수 누적
             inputs, gts, masks = inputs.to(device), gts.to(device), masks.to(device)
@@ -127,17 +127,19 @@ def validate_epoch(generator, discriminator, dataloader, device, criterion, writ
 
                 # Loop through batch and save each image
                 for idx in range(sample_images.shape[0]):
+                    filename = filenames[idx]
+
                     # Reshape: (C, H, W) -> (H, W, C)
                     sample_image_np = (sample_images[idx].transpose(1, 2, 0) * 255).astype(np.uint8)
                     gt_image_np = (gt_images[idx].transpose(1, 2, 0) * 255).astype(np.uint8)
                     input_image_np = (input_images[idx].transpose(1, 2, 0) * 255).astype(np.uint8)
 
                     # Save images using OpenCV
-                    cv2.imwrite(os.path.join(epoch_save_dir, f'sample_{i + 1}_{idx + 1}.png'),
+                    cv2.imwrite(os.path.join(epoch_save_dir, f'sample_{i + 1}_{idx + 1}_{filename}.png'),
                                 cv2.cvtColor(sample_image_np, cv2.COLOR_RGB2BGR))
-                    cv2.imwrite(os.path.join(epoch_save_dir, f'gt_{i + 1}_{idx + 1}.png'),
+                    cv2.imwrite(os.path.join(epoch_save_dir, f'gt_{i + 1}_{idx + 1}_{filename}.png'),
                                 cv2.cvtColor(gt_image_np, cv2.COLOR_RGB2BGR))
-                    cv2.imwrite(os.path.join(epoch_save_dir, f'input_{i + 1}_{idx + 1}.png'),
+                    cv2.imwrite(os.path.join(epoch_save_dir, f'input_{i + 1}_{idx + 1}_{filename}.png'),
                                 cv2.cvtColor(input_image_np, cv2.COLOR_RGB2BGR))
 
             g_loss_adv = criterion(discriminator(fake_images),
@@ -219,7 +221,7 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 
 def main():
     # Paths
-    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Unet_GAN_temp_recogL2loss_0.1_D70x70/db1_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Unet_GAN_temp_just_change_D_70x70_epoch400_pixelLoss10_recogL2loss_0.1/db1_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     train_image_paths = '/content/dataset/reflection_random(50to1.7)_db1_224_trainset'  # List of input image paths
@@ -247,7 +249,7 @@ def main():
     # Parameters
     batch_size = 16
     lr = 0.0002
-    num_epochs = 300
+    num_epochs = 400
     lambda_adv = 0.1
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -340,7 +342,7 @@ def main():
             ])
 
         # Save checkpoint
-        if epoch >= 250:
+        if epoch >= 350:
             
             torch.save({
                 "epoch": epoch + 1,

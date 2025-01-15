@@ -197,7 +197,7 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 def main():
     # Paths
     
-    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Unet_GAN_temp_just_change_D_70x70_epoch400_pixelLoss10/db1_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Unet_GAN_temp_just_change_D_70x70_epoch400_pixelLoss10_lr_0.0001_beta1_0.9_colab/db1_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     train_image_paths = '/content/dataset//reflection_random(50to1.7)_db1_224_trainset'  # List of input image paths
@@ -219,7 +219,7 @@ def main():
 
     # Parameters
     batch_size = 16
-    lr = 0.0002
+    lr = 0.0001
     num_epochs = 400
     lambda_adv = 0.1
 
@@ -239,8 +239,8 @@ def main():
     discriminator = Discriminator().to(device)
 
     # Optimizers
-    optimizer_g = optim.Adam(generator.parameters(), lr=lr, betas=(0.5, 0.999))
-    optimizer_d = optim.Adam(discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
+    optimizer_g = optim.Adam(generator.parameters(), lr=lr, betas=(0.9, 0.999))
+    optimizer_d = optim.Adam(discriminator.parameters(), lr=lr, betas=(0.9, 0.999))
 
     # 그래프 local에 저장 위한
     g_losses = []  # train loss
@@ -305,7 +305,7 @@ def main():
 
 
         # Save checkpoint
-        if epoch >= 350:
+        if epoch >= 365:
             torch.save({
                 "epoch": epoch + 1,
                 "generator_state_dict": generator.state_dict(),

@@ -346,7 +346,7 @@ def main():
             ])
 
         # Save checkpoint
-        if epoch >= 360:
+        if epoch >= 200:
             
             torch.save({
                 "epoch": epoch + 1,

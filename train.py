@@ -305,7 +305,7 @@ def main():
 
 
         # Save checkpoint
-        if epoch >= 365:
+        if epoch >= 200:
             torch.save({
                 "epoch": epoch + 1,
                 "generator_state_dict": generator.state_dict(),

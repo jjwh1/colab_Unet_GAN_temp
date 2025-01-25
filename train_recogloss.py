@@ -45,10 +45,10 @@ def train_gan_epoch(generator, discriminator, dataloader, criterion, optimizer_g
     total_samples = 0
     progress_bar = tqdm(dataloader, desc="Training", leave=False)
 
-    for inputs, gts, masks, _ ,_ ,_ in progress_bar:
+    for inputs, gts, masks, _ ,_ ,largemasks in progress_bar:
         batch_size = inputs.size(0)  # 현재 배치 크기
         total_samples += batch_size  # 전체 샘플 수 누적
-        inputs, gts, masks = inputs.to(device), gts.to(device), masks.to(device)
+        inputs, gts, masks, largemasks = inputs.to(device), gts.to(device), masks.to(device), largemasks.to(device)
 
         # Train Discriminator
         optimizer_d.zero_grad()
@@ -73,7 +73,7 @@ def train_gan_epoch(generator, discriminator, dataloader, criterion, optimizer_g
         fake_output = discriminator(fake_images)
         g_loss_adv = criterion(fake_output, torch.ones_like(fake_output).to(device))  # Discriminator를 잘 속이는지에 대한 지표(loss)
         # g_loss_pixel = nn.MSELoss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
-        g_loss_pixel = nn.MSELoss()(fake_images * (1 - masks), gts * (1 - masks)) + 100 * nn.MSELoss()(fake_images * masks, gts * masks)
+        g_loss_pixel = nn.MSELoss()(fake_images * (1 - largemasks), gts * (1 - largemasks)) + 100 * nn.MSELoss()(fake_images * largemasks, gts * largemasks)
 
         # [추가] Feature L1 Loss 계산
         g_loss_recog = feature_l1_loss(fake_images, gts, recognition_model, device)
@@ -111,7 +111,7 @@ def validate_epoch(generator, discriminator, dataloader, device, criterion, writ
     os.makedirs(epoch_save_dir, exist_ok=True)
 
     with torch.no_grad():
-        for i, (inputs, gts, masks, filenames, _, _) in enumerate(dataloader):
+        for i, (inputs, gts, masks, filenames, _, largemasks) in enumerate(dataloader):
             batch_size = inputs.size(0)  # 현재 배치 크기
             total_samples += batch_size  # 전체 샘플 수 누적
             inputs, gts, masks = inputs.to(device), gts.to(device), masks.to(device)
@@ -119,7 +119,7 @@ def validate_epoch(generator, discriminator, dataloader, device, criterion, writ
 
             # Save a few sample images
 
-            if i < 8:  # Save up to 5 sample images per epoch
+            if i < 5:  # Save up to 5 sample images per epoch
                 # Convert from -1~1 to 0~1 for saving
                 images = inputs[:, :3, :, :] # concat된 마스크 제외한 input 이미지만
 
@@ -147,7 +147,7 @@ def validate_epoch(generator, discriminator, dataloader, device, criterion, writ
             g_loss_adv = criterion(discriminator(fake_images),
                                    torch.ones_like(discriminator(fake_images)).to(device))  # Discriminator를 잘 속이는지에 대한 지표(loss)
             # g_loss_pixel = nn.MSELoss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
-            g_loss_pixel = nn.MSELoss()(fake_images * (1 - masks), gts * (1 - masks)) + 100 * nn.MSELoss()(fake_images * masks, gts * masks)
+            g_loss_pixel = nn.MSELoss()(fake_images * (1 - largemasks), gts * (1 - largemasks)) + 100 * nn.MSELoss()(fake_images * largemasks, gts * largemasks)
 
             g_loss_recog = feature_l1_loss(fake_images, gts, recognition_model, device)
 
@@ -225,7 +225,7 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 
 def main():
     # Paths
-    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Unet_GAN_add_L2_hole_loss_100_recogL2lossfold1_0.1_colab/db1_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Unet_GAN_add_L2_largemask_hole_loss_100_recogL2lossfold1_0.1_colab/db1_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     train_image_paths = '/content/dataset/reflection_random(50to1.7)_db1_224_trainset'  # List of input image paths
@@ -346,7 +346,7 @@ def main():
             ])
 
         # Save checkpoint
-        if epoch >= 200:
+        if epoch >= 350:
             
             torch.save({
                 "epoch": epoch + 1,

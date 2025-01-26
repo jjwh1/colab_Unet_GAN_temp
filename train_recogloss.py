@@ -114,7 +114,7 @@ def validate_epoch(generator, discriminator, dataloader, device, criterion, writ
         for i, (inputs, gts, masks, filenames, _, largemasks) in enumerate(dataloader):
             batch_size = inputs.size(0)  # 현재 배치 크기
             total_samples += batch_size  # 전체 샘플 수 누적
-            inputs, gts, masks = inputs.to(device), gts.to(device), masks.to(device)
+            inputs, gts, masks, largemasks = inputs.to(device), gts.to(device), masks.to(device), largemasks.to(device)
             fake_images = generator(inputs)
 
             # Save a few sample images

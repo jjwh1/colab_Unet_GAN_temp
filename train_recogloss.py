@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
-from models_MSA_nodil import UNetGenerator, Discriminator
+from models import UNetGenerator, Discriminator
 from dataset import InpaintDataset
 from torchvision import transforms, utils
 from torchmetrics import PeakSignalNoiseRatio, StructuralSimilarityIndexMeasure
@@ -225,7 +225,7 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 
 def main():
     # Paths
-    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/MSA_nodil_Unet_GAN_add_L2_largemask_hole_loss_100_recogL2lossfold2_0.1/db2_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Unet_GAN_add_L2_largemask_hole_loss_100_recogL2lossfold2_0.1_colab/db2_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     train_image_paths = '/content/dataset/reflection_random(50to1.7)_db2_224_trainset'  # List of input image paths

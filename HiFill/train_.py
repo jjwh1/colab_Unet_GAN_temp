@@ -268,7 +268,7 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 
 def main():
     # Paths
-        save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/HiFill_fold1_colab/db1_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/HiFill_fold1_colab/db1_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     train_image_paths = '/content/dataset/reflection_random(50to1.7)_db1_224_trainset'  # List of input image paths

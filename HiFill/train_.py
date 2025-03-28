@@ -352,7 +352,7 @@ def main():
     start_epoch = 0
 
     if checkpoint_path:
-        generator, discriminator, optimizer_g, optimizer_d, start_epoch, g_loss, g_l2_loss, d_loss \
+        generator, discriminator, optimizer_g, optimizer_d, start_epoch, g_loss, g_l2_loss, g_adv_loss,d_loss \
             = load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, optimizer_d)
 
 

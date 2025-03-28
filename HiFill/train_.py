@@ -256,7 +256,7 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
     generator.load_state_dict(checkpoint["generator_state_dict"])
     discriminator.load_state_dict(checkpoint["discriminator_state_dict"])
     optimizer_g.load_state_dict(checkpoint["optimizer_g_state_dict"])
-    optimizer_d.load_state_dict(checkpoint["optimizer_d1_state_dict"])
+    optimizer_d.load_state_dict(checkpoint["optimizer_d_state_dict"])
     epoch = checkpoint["epoch"]   # start_epoch 뱉을 때
     g_loss = checkpoint["g_loss"]
     g_l2_loss = checkpoint["g_l2_loss"]

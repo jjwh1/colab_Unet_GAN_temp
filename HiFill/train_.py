@@ -268,18 +268,18 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 
 def main():
     # Paths
-    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/HiFill_fold1_colab/db1_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/HiFill_fold2_colab/db2_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
-    train_image_paths = '/content/dataset/reflection_random(50to1.7)_db1_224_trainset'  # List of input image paths
-    train_mask_paths = '/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db1_test_layer12_0.3_only_mask_trainset'  # List of mask paths
-    train_gt_paths = "/content/dataset/db1_224_for_gt_inpainting_trainset"  # List of ground truth paths
-    train_large_mask_paths = "/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db1_test_layer12_0.3_only_mask_h2.8_w3_trainset"  # List of ground truth paths
+    train_image_paths = '/content/dataset/reflection_random(50to1.7)_db2_224_trainset'  # List of input image paths
+    train_mask_paths = '/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_trainset'  # List of mask paths
+    train_gt_paths = "/content/dataset/db2_224_for_gt_inpainting_trainset"  # List of ground truth paths
+    train_large_mask_paths = "/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h2.8_w3_trainset"  # List of ground truth paths
 
-    val_image_paths = '/content/dataset/reflection_random(50to1.7)_db1_224_validset'  # List of input image paths
-    val_mask_paths = '/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db1_test_layer12_0.3_only_mask_validset'  # List of mask paths
-    val_gt_paths = "/content/dataset/db1_224_for_gt_inpainting_validset"  # List of ground truth paths
-    val_large_mask_paths = "/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db1_test_layer12_0.3_only_mask_h2.8_w3_validset"  # List of ground truth paths
+    val_image_paths = '/content/dataset/reflection_random(50to1.7)_db2_224_validset'  # List of input image paths
+    val_mask_paths = '/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_validset'  # List of mask paths
+    val_gt_paths = "/content/dataset/db2_224_for_gt_inpainting_validset"  # List of ground truth paths
+    val_large_mask_paths = "/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h2.8_w3_validset"  # List of ground truth paths
 
     results_path = os.path.join(save_dir, "metrics.csv")
 

@@ -298,8 +298,8 @@ def main():
 
     os.makedirs(save_dir, exist_ok=True)
 
-    # checkpoint_path = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/HiFill_fold2_colab/db2_train/checkpoint_epoch_184.tar"  # 불러올 시 마지막 저장된 pth파일 경로 입력!!
-    checkpoint_path = None
+    checkpoint_path = "/content/drive/MyDrive/inpaint_result/CASIA_Distance/HiFill_fold2_colab/db2_train/checkpoint_epoch_120.tar"  # 불러올 시 마지막 저장된 pth파일 경로 입력!!
+    # checkpoint_path = None
 
     # Parameters
     batch_size = 8

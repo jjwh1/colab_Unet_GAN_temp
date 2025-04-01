@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
-from models import GatedGenerator, PatchDiscriminator
+from models import GatedGenerator, Discriminator
 from dataset import InpaintDataset
 from torchvision import transforms, utils
 from torchmetrics import PeakSignalNoiseRatio, StructuralSimilarityIndexMeasure
@@ -16,6 +16,7 @@ import random
 from torch.utils.tensorboard import SummaryWriter  # TensorBoard
 from datetime import datetime
 import csv
+import torch.nn.functional as F
 
 def seed_everything(seed):
     torch.manual_seed(seed) #torch를 거치는 모든 난수들의 생성순서를 고정한다
@@ -42,7 +43,7 @@ def train_gan_epoch(generator, discriminator, dataloader, optimizer_g, optimizer
 
         # Train Discriminator
         optimizer_d.zero_grad()
-        fake_images1, fake_images2 = generator(inputs,masks)
+        _, fake_images2 = generator(inputs,largemasks)
         real_output = discriminator(gts,masks) # dis의 output: (batch_size, 1) 형태의 출력 텐서
         # 네트워크에서 생성된 값이 아니라 데이터셋에서 직접 가져온 Ground Truth 이미지이기 때문에 이 데이터는 모델의 그래디언트 업데이트에 영향을 주는 학습 파라미터와 연결된 계산 그래프에 속하지 않음
         # 따라서, 이미 계산 그래프와 분리되어 있으므로 detach()가 필요하지 않습니다.
@@ -56,29 +57,13 @@ def train_gan_epoch(generator, discriminator, dataloader, optimizer_g, optimizer
         # d_loss_fake = nn.BCELoss()(fake_output, torch.zeros_like(fake_output).to(device))  # cross entropy는 0~1 확률값을 다룰 때 좋음. (동찬선배가 설명해준 그래프 생각)
         # d_loss = d_loss_real + d_loss_fake
 
-        # [WGAN] Real image loss
-        d_loss_real = -torch.mean(real_output)
+        # Real image loss
+        d_loss_real = torch.mean(F.relu(1. - real_output))
+        #  Fake image loss
+        d_loss_fake = torch.mean(F.relu(1. + fake_output))
 
-        # [WGAN] Fake image loss
-        d_loss_fake = torch.mean(fake_output)
 
-        # [WGAN] Gradient penalty 계산 포함 필요
-        alpha = torch.rand(batch_size, 1, 1, 1, device=device)
-        interpolated = alpha * gts + (1 - alpha) * fake_images2.detach()
-        interpolated.requires_grad_(True)
-        d_interpolated = discriminator(interpolated, masks)
-        gradients = torch.autograd.grad(
-            outputs=d_interpolated,
-            inputs=interpolated,
-            grad_outputs=torch.ones_like(d_interpolated),
-            create_graph=True,
-            retain_graph=True,
-            only_inputs=True
-        )[0]
-        gradients = gradients.view(batch_size, -1)
-        gp = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
-        lambda_gp = 10
-        d_loss = d_loss_real + d_loss_fake + lambda_gp * gp
+        d_loss = 0.5*d_loss_real + 0.5*d_loss_fake
 
         d_loss.backward()
         optimizer_d.step()
@@ -87,19 +72,16 @@ def train_gan_epoch(generator, discriminator, dataloader, optimizer_g, optimizer
 
         # Train Generator
         optimizer_g.zero_grad()
-        fake_output = discriminator(fake_images2,masks)
+
         # g_loss_adv = nn.BCELoss()(fake_output, torch.ones_like(fake_output).to(device))  # Discriminator를 잘 속이는지에 대한 지표(loss)
-        # [WGAN] Adversarial loss for Generator
+        # Adversarial loss for Generator
         g_loss_adv = -torch.mean(discriminator(fake_images2, masks))
 
         # g_loss_pixel = nn.L1Loss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
 
-        g_loss_pixel1 = 1.2*nn.L1Loss()(fake_images1 * (1 - largemasks), gts * (1 - largemasks)) + 1 * nn.L1Loss()(fake_images1 * largemasks, gts * largemasks)
-        g_loss_pixel2 = 1.2*nn.L1Loss()(fake_images2 * (1 - largemasks), gts * (1 - largemasks)) + 1 * nn.L1Loss()(fake_images2 * largemasks, gts * largemasks)
+        g_loss_pixel = nn.L1Loss()(fake_images2, gts)
 
-        g_loss_pixel=g_loss_pixel1+g_loss_pixel2
-
-        g_loss = 0.0001 * g_loss_adv+ g_loss_pixel
+        g_loss = g_loss_adv+ g_loss_pixel
         g_loss.backward()
         optimizer_g.step()
 
@@ -134,7 +116,7 @@ def validate_epoch(generator, discriminator, dataloader, device, writer, epoch,s
             batch_size = inputs.size(0)  # 현재 배치 크기
             total_samples += batch_size  # 전체 샘플 수 누적
             inputs, gts, masks, largemasks = inputs.to(device), gts.to(device), masks.to(device), largemasks.to(device)
-            fake_images1,fake_images2 = generator(inputs,masks)
+            _,fake_images2 = generator(inputs,largemasks)
 
             # Save a few sample images
 
@@ -167,65 +149,34 @@ def validate_epoch(generator, discriminator, dataloader, device, writer, epoch,s
                     cv2.imwrite(os.path.join(epoch_save_dir, f'input_{i + 1}_{idx + 1}.png'),
                                 cv2.cvtColor(input_image_np, cv2.COLOR_RGB2BGR))
 
-            fake_output = discriminator(fake_images2,masks)
-            # g_loss_adv = nn.BCELoss()(fake_output,
-            #                           torch.ones_like(fake_output).to(device))  # Discriminator를 잘 속이는지에 대한 지표(loss)
-            # [WGAN] Adversarial loss for Generator
+
             g_loss_adv = -torch.mean(discriminator(fake_images2, masks))
 
             # g_loss_pixel = nn.L1Loss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
 
-            g_loss_pixel1 = 1.2 * nn.L1Loss()(fake_images1 * (1 - largemasks),
-                                               gts * (1 - largemasks)) + 1 * nn.L1Loss()(fake_images1 * largemasks,
-                                                                                          gts * largemasks)
-            g_loss_pixel2 = 1.2 * nn.L1Loss()(fake_images2 * (1 - largemasks),
-                                               gts * (1 - largemasks)) + 1 * nn.L1Loss()(fake_images2 * largemasks,
-                                                                                          gts * largemasks)
+            g_loss_pixel = nn.L1Loss()(fake_images2, gts)
 
-            g_loss_pixel = g_loss_pixel1 + g_loss_pixel2
+            g_loss = g_loss_adv + g_loss_pixel
 
-            g_loss = 0.0001 * g_loss_adv + g_loss_pixel
-
-            real_output = discriminator(gts,masks)  # dis의 output: (batch_size, 1) 형태의 출력 텐서
+            real_output = discriminator(gts, masks)  # dis의 output: (batch_size, 1) 형태의 출력 텐서
             # 네트워크에서 생성된 값이 아니라 데이터셋에서 직접 가져온 Ground Truth 이미지이기 때문에 이 데이터는 모델의 그래디언트 업데이트에 영향을 주는 학습 파라미터와 연결된 계산 그래프에 속하지 않음
             # 따라서, 이미 계산 그래프와 분리되어 있으므로 detach()가 필요하지 않습니다.
             # gts는 외부에서 불러온 이미지 (고정된 것이고, 변하면 안됨)이니 그라디언트 자체가 없음
-            # fake_output = discriminator(fake_images2.detach(),masks)  # dis의 output: (batch_size, 1) 형태의 출력 텐서
+            fake_output = discriminator(fake_images2.detach(), masks)  # dis의 output: (batch_size, 1) 형태의 출력 텐서
             # 만약 detach()를 사용하지 않으면, fake_images를 통해 흘러간 그래디언트는 Generator까지 전파되어 Generator의 가중치가 갱신됨
             # 즉, fake_output이 d_loss에 반영되고, fake_output은 gen에서 만든 fake_images를 입력으로 받기 때문에 d_loss 최적화 시 fake_images에 영향을 주게 됨. 따라서 d_loss를 최적화하기 위해 fake_images가 그에 맞게 바뀔 수가 있음
             # fake_images가 그에 맞게 바뀐다는 말은 이걸 만든 generator가 바뀐다는거니 generator의 weight가 바뀌게 됨
             # gpt: fake_images.detach()는 Generator에서 생성된 이미지를 그래프에서 분리하기 위한 것입니다.
-            # d_loss_real = nn.BCELoss()(real_output, torch.ones_like(real_output).to(
-            #     device))  # criterion이 BCE라고 하면 이미 배치 수만큼 평균 내주는게 내장돼있어 .mean()하지 않아도됨.
-            # d_loss_fake = nn.BCELoss()(fake_output, torch.zeros_like(fake_output).to(
-            #     device))  # cross entropy는 0~1 확률값을 다룰 때 좋음. (동찬선배가 설명해준 그래프 생각)
+            # d_loss_real = nn.BCELoss()(real_output, torch.ones_like(real_output).to(device))   # criterion이 BCE라고 하면 이미 배치 수만큼 평균 내주는게 내장돼있어 .mean()하지 않아도됨.
+            # d_loss_fake = nn.BCELoss()(fake_output, torch.zeros_like(fake_output).to(device))  # cross entropy는 0~1 확률값을 다룰 때 좋음. (동찬선배가 설명해준 그래프 생각)
             # d_loss = d_loss_real + d_loss_fake
 
-            # [WGAN] Real image loss
-            # d_loss_real = -torch.mean(real_output)
-            #
-            # # [WGAN] Fake image loss
-            # d_loss_fake = torch.mean(fake_output)
-            #
-            # # [WGAN] Gradient penalty 계산 포함 필요
-            # alpha = torch.rand(batch_size, 1, 1, 1, device=device)
-            # interpolated = alpha * gts + (1 - alpha) * fake_images2.detach()
-            # interpolated.requires_grad_(True)
-            # d_interpolated = discriminator(interpolated, masks)
-            # gradients = torch.autograd.grad(
-            #     outputs=d_interpolated,
-            #     inputs=interpolated,
-            #     grad_outputs=torch.ones_like(d_interpolated),
-            #     create_graph=True,
-            #     retain_graph=True,
-            #     only_inputs=True
-            # )[0]
-            # gradients = gradients.view(batch_size, -1)
-            # gp = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
-            # lambda_gp = 10
-            # d_loss = d_loss_real + d_loss_fake + lambda_gp * gp
-            # Validation에서는 discriminator의 출력만으로 fake 여부 판단
-            d_loss = torch.mean(discriminator(fake_images2, masks))
+            # Real image loss
+            d_loss_real = torch.mean(F.relu(1. - real_output))
+            #  Fake image loss
+            d_loss_fake = torch.mean(F.relu(1. + fake_output))
+
+            d_loss = 0.5 * d_loss_real + 0.5 * d_loss_fake
 
             val_g_loss += g_loss.item()* batch_size
             val_g_l2_loss += g_loss_pixel.item()* batch_size
@@ -251,13 +202,25 @@ def validate_epoch(generator, discriminator, dataloader, device, writer, epoch,s
 
 
     return val_g_loss, val_g_l2_loss, val_g_adv_loss, val_d_loss, psnr_value, ssim_value
+# def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, optimizer_d):
+#     checkpoint = torch.load(checkpoint_path)
+#     generator.load_state_dict(checkpoint["generator_state_dict"])
+#     discriminator.load_state_dict(checkpoint["discriminator1_state_dict"])
+#     optimizer_g.load_state_dict(checkpoint["optimizer_g_state_dict"])
+#     optimizer_d.load_state_dict(checkpoint["optimizer_d1_state_dict"])
+#     epoch = checkpoint["epoch"]   # start_epoch 뱉을 때
+#     g_loss = checkpoint["g_loss"]
+#     g_l2_loss = checkpoint["g_l2_loss"]
+#     g_adv_loss = checkpoint["g_adv_loss"]
+#     d_loss = checkpoint["d_loss"]
+#     return generator, discriminator, optimizer_g, optimizer_d, epoch, g_loss, g_l2_loss, g_adv_loss, d_loss
 def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, optimizer_d):
     checkpoint = torch.load(checkpoint_path)
     generator.load_state_dict(checkpoint["generator_state_dict"])
-    discriminator.load_state_dict(checkpoint["discriminator_state_dict"])
+    discriminator.load_state_dict(checkpoint["discriminator_state_dict"])  # 수정됨
     optimizer_g.load_state_dict(checkpoint["optimizer_g_state_dict"])
-    optimizer_d.load_state_dict(checkpoint["optimizer_d_state_dict"])
-    epoch = checkpoint["epoch"]   # start_epoch 뱉을 때
+    optimizer_d.load_state_dict(checkpoint["optimizer_d_state_dict"])  # 수정됨
+    epoch = checkpoint["epoch"]
     g_loss = checkpoint["g_loss"]
     g_l2_loss = checkpoint["g_l2_loss"]
     g_adv_loss = checkpoint["g_adv_loss"]
@@ -268,18 +231,18 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 
 def main():
     # Paths
-    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/HiFill_lr_000100001_fold2_colab/db2_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/DeepFillv2_lr_00010001_fold1_colab/db1_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
-    train_image_paths = '/content/dataset/reflection_random(50to1.7)_db2_224_trainset'  # List of input image paths
-    train_mask_paths = '/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_trainset'  # List of mask paths
-    train_gt_paths = "/content/dataset/db2_224_for_gt_inpainting_trainset"  # List of ground truth paths
-    train_large_mask_paths = "/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h2.8_w3_trainset"  # List of ground truth paths
+    train_image_paths = '/content/dataset/reflection_random(50to1.7)_db1_224_trainset'  # List of input image paths
+    train_mask_paths = '/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db1_test_layer12_0.3_only_mask_trainset'  # List of mask paths
+    train_gt_paths = "/content/dataset/db1_224_for_gt_inpainting_trainset"  # List of ground truth paths
+    train_large_mask_paths = "/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db1_test_layer12_0.3_only_mask_h2.8_w3_trainset"  # List of ground truth paths
 
-    val_image_paths = '/content/dataset/reflection_random(50to1.7)_db2_224_validset'  # List of input image paths
-    val_mask_paths = '/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_validset'  # List of mask paths
-    val_gt_paths = "/content/dataset/db2_224_for_gt_inpainting_validset"  # List of ground truth paths
-    val_large_mask_paths = "/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h2.8_w3_validset"  # List of ground truth paths
+    val_image_paths = '/content/dataset/reflection_random(50to1.7)_db1_224_validset'  # List of input image paths
+    val_mask_paths = '/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db1_test_layer12_0.3_only_mask_validset'  # List of mask paths
+    val_gt_paths = "/content/dataset/db1_224_for_gt_inpainting_validset"  # List of ground truth paths
+    val_large_mask_paths = "/content/dataset/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db1_test_layer12_0.3_only_mask_h2.8_w3_validset"  # List of ground truth paths
     results_path = os.path.join(save_dir, "metrics.csv")
     
     # save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Distance/HiFill_fold2_colab/db2_train"
@@ -298,15 +261,15 @@ def main():
 
     os.makedirs(save_dir, exist_ok=True)
 
-    # checkpoint_path = "/content/drive/MyDrive/inpaint_result/CASIA_Distance/HiFill_fold2_colab/db2_train/checkpoint_epoch_140.tar"  # 불러올 시 마지막 저장된 pth파일 경로 입력!!
+    # checkpoint_path = r"D:\inpaint_result\CASIA_Distance\HiFill_fold1_py\db1_train/checkpoint_epoch_150.tar"  # 불러올 시 마지막 저장된 pth파일 경로 입력!!
     checkpoint_path = None
 
     # Parameters
     batch_size = 8
     # lr = 0.0002
     lr_g = 0.0001
-    lr_d = 0.00001
-    num_epochs = 330
+    lr_d = 0.0001
+    num_epochs = 400
     lambda_adv = 0.1
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -325,7 +288,7 @@ def main():
 
     # Models and losses
     generator = GatedGenerator().to(device)
-    discriminator = PatchDiscriminator().to(device)
+    discriminator = Discriminator().to(device)
 
     # Optimizers
     optimizer_g = optim.Adam(generator.parameters(), lr=lr_g, betas=(0.5, 0.999))
@@ -354,7 +317,7 @@ def main():
     start_epoch = 0
 
     if checkpoint_path:
-        generator, discriminator, optimizer_g, optimizer_d, start_epoch, g_loss, g_l2_loss, g_adv_loss,d_loss \
+        generator, discriminator, optimizer_g, optimizer_d, start_epoch, g_loss, g_l2_loss,g_adv_loss, d_loss \
             = load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, optimizer_d)
 
 
@@ -407,7 +370,7 @@ def main():
                 psnr, ssim
             ])
 
-        if epoch >= 40:
+        if epoch >= 50:
             # Save checkpoint
             torch.save({
                 "epoch": epoch + 1,

@@ -269,8 +269,8 @@ def main():
     loss_smgan = smgan()  # .to(device) 필요없음(nn.Module을 상속받은 클래스만 .to(device)를 사용할 수 있음)
 
     # Optimizers
-    optimizer_g = optim.Adam(generator.parameters(), lr=lr, betas=(0, 0.999))
-    optimizer_d = optim.Adam(discriminator.parameters(), lr=lr, betas=(0, 0.999))
+    optimizer_g = optim.Adam(generator.parameters(), lr=lr, betas=(0.0, 0.999))
+    optimizer_d = optim.Adam(discriminator.parameters(), lr=lr, betas=(0.0, 0.999))
 
     # 그래프 local에 저장 위한
     g_losses = []  # train loss

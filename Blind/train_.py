@@ -323,7 +323,7 @@ def main():
                 psnr, ssim
             ])
 
-        if epoch >= 50:
+        if epoch >= 3:
             # Save checkpoint
             torch.save({
                 "epoch": epoch + 1,

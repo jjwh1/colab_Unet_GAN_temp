@@ -218,10 +218,10 @@ def main():
     checkpoint_path = None
 
     # Parameters
-    batch_size = 2
+    batch_size = 8
     # lr = 0.0002
     lr_g = 0.0001
-    num_epochs = 400
+    num_epochs = 100
     lambda_adv = 0.1
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -233,11 +233,11 @@ def main():
     val_dataset = InpaintDataset(val_image_paths, val_mask_paths, val_gt_paths, val_large_mask_paths)
 
 
-    # train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
+    # train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-    # val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
+    # val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
 
     # Models and losses

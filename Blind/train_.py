@@ -134,8 +134,8 @@ def validate_epoch(generator, dataloader, device, writer, perceptualloss, epoch,
 
 
 
-            val_g_loss += g_loss.item()* batch_size
-            val_g_l2_loss += g_loss_pixel.item()* batch_size
+            val_g_loss += g_loss* batch_size
+            val_g_l2_loss += g_loss_pixel* batch_size
 
 
             psnr(fake_images, gts)  # 계속 누적됨 (각 배치당 psnr이 누적(배치size로 평균처리)돼서 한 epoch를 채우면 밑에서 compute를 통해 반환)
@@ -218,7 +218,7 @@ def main():
     checkpoint_path = None
 
     # Parameters
-    batch_size = 8
+    batch_size = 2
     # lr = 0.0002
     lr_g = 0.0001
     num_epochs = 400
@@ -233,11 +233,11 @@ def main():
     val_dataset = InpaintDataset(val_image_paths, val_mask_paths, val_gt_paths, val_large_mask_paths)
 
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
-    # train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    # train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
-    # val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    # val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
 
     # Models and losses

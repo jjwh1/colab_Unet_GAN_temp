@@ -218,7 +218,7 @@ def main():
     checkpoint_path = None
 
     # Parameters
-    batch_size = 8
+    batch_size = 4
     # lr = 0.0002
     lr_g = 0.0001
     num_epochs = 400

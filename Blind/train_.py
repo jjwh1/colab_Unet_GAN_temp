@@ -56,7 +56,7 @@ def train_gan_epoch(generator, dataloader, optimizer_g, device, perceptualloss):
         g_ssim_loss = 1 - ssim(fake_images, gts)
         g_perceptual_loss= perceptualloss(fake_images, gts)
 
-        g_loss =  10* g_loss_pixel + 0.4*g_edge_loss + 0.6*g_perceptual_loss + 0.5*g_ssim_loss
+        g_loss =  0.5* g_loss_pixel + 0.4*g_edge_loss + 0.6*g_perceptual_loss + 0.5*g_ssim_loss
         g_loss.backward()
         optimizer_g.step()
 
@@ -184,7 +184,7 @@ def load_checkpoint(checkpoint_path, generator, optimizer_g, optimizer_d):
 
 def main():
     # Paths
-    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Blind_lr_0001_fold1_colab/db1_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/Blind_lr_0001_L1loss0.5_fold1_colab/db1_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     train_image_paths = '/content/dataset/reflection_random(50to1.7)_db1_224_trainset'  # List of input image paths

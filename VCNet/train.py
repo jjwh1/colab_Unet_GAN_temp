@@ -182,9 +182,10 @@ def validate_epoch(generator,mpn, discriminator, dataloader, device, writer, epo
 
 
     return val_g_loss, val_g_l2_loss, val_g_adv_loss, val_d_loss, psnr_value, ssim_value
-def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, optimizer_d):
+def load_checkpoint(checkpoint_path, generator, mpn,discriminator, optimizer_g, optimizer_d):
     checkpoint = torch.load(checkpoint_path)
     generator.load_state_dict(checkpoint["generator_state_dict"])
+    mpn.load_state_dict(checkpoint["mpn_state_dict"])  # ✅ 추가
     discriminator.load_state_dict(checkpoint["discriminator1_state_dict"])
     optimizer_g.load_state_dict(checkpoint["optimizer_g_state_dict"])
     optimizer_d.load_state_dict(checkpoint["optimizer_d1_state_dict"])
@@ -301,7 +302,7 @@ def main():
 
     if checkpoint_path:
         generator, discriminator, optimizer_g, optimizer_d, start_epoch, g_loss, g_l2_loss, d_loss \
-            = load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, optimizer_d)
+            = load_checkpoint(checkpoint_path, generator,mpn, discriminator, optimizer_g, optimizer_d)
 
 
         print(f"Resuming training from epoch {start_epoch + 1}")
@@ -360,6 +361,7 @@ def main():
             torch.save({
                 "epoch": epoch + 1,
                 "generator_state_dict": generator.state_dict(),
+                "mpn_state_dict": mpn.state_dict(),  # ✅ 추가
                 "g_loss": g_loss,
                 "g_l2_loss": g_l2_loss,
                 "g_adv_loss": g_adv_loss,

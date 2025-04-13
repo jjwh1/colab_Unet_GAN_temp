@@ -231,8 +231,8 @@ def main():
 
     os.makedirs(save_dir, exist_ok=True)
 
-    # checkpoint_path = "D:/inpaint_result/CASIA_Distance/TT-Unet_GAN_D_100x100/db1_train_2/checkpoint_epoch_106.pth.tar"  # 불러올 시 마지막 저장된 pth파일 경로 입력!!
-    checkpoint_path = None
+    checkpoint_path = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/VCNet_lr_0000100001_L1_0.8_noSEMTEXloss_beta_paper_fold2_colab_re/db2_train/checkpoint_epoch_106.pth.tar"  # 불러올 시 마지막 저장된 pth파일 경로 입력!!
+    # checkpoint_path = None
 
     # Parameters
     batch_size = 4
@@ -356,7 +356,7 @@ def main():
                 psnr, ssim
             ])
 
-        if epoch >= 20:
+        if epoch >= 1:
             # Save checkpoint
             torch.save({
                 "epoch": epoch + 1,

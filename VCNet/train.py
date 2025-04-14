@@ -194,7 +194,7 @@ def load_checkpoint(checkpoint_path, generator, mpn,discriminator, optimizer_g, 
     g_l2_loss = checkpoint["g_l2_loss"]
     g_adv_loss = checkpoint["g_adv_loss"]
     d_loss = checkpoint["d_loss"]
-    return generator, discriminator, optimizer_g, optimizer_d, epoch, g_loss, g_l2_loss, g_adv_loss, d_loss
+    return generator, mpn, discriminator, optimizer_g, optimizer_d, epoch, g_loss, g_l2_loss, g_adv_loss, d_loss
 
 
 
@@ -231,8 +231,8 @@ def main():
 
     os.makedirs(save_dir, exist_ok=True)
 
-    # checkpoint_path = "D:/inpaint_result/CASIA_Distance/TT-Unet_GAN_D_100x100/db1_train_2/checkpoint_epoch_106.pth.tar"  # 불러올 시 마지막 저장된 pth파일 경로 입력!!
-    checkpoint_path = None
+    checkpoint_path = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/VCNet_lr_0000100001_L1_0.8_noSEMTEXloss_beta_paper_fold1_colab_re/db1_train/checkpoint_epoch_38tar"  # 불러올 시 마지막 저장된 pth파일 경로 입력!!
+    # checkpoint_path = None
 
     # Parameters
     batch_size = 4
@@ -301,7 +301,7 @@ def main():
     start_epoch = 0
 
     if checkpoint_path:
-        generator, discriminator, optimizer_g, optimizer_d, start_epoch, g_loss, g_l2_loss, d_loss \
+        generator, mpn,discriminator, optimizer_g, optimizer_d, start_epoch, g_loss, g_l2_loss, d_loss \
             = load_checkpoint(checkpoint_path, generator,mpn, discriminator, optimizer_g, optimizer_d)
 
 

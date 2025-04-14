@@ -194,7 +194,7 @@ def load_checkpoint(checkpoint_path, generator, mpn,discriminator, optimizer_g, 
     g_l2_loss = checkpoint["g_l2_loss"]
     g_adv_loss = checkpoint["g_adv_loss"]
     d_loss = checkpoint["d_loss"]
-    return generator, mpn, discriminator, optimizer_g, optimizer_d, epoch, g_loss, g_l2_loss, g_adv_loss, d_loss
+    return generator, mpn, discriminator, optimizer_g, optimizer_d, epoch, g_loss, g_l2_loss, d_loss
 
 
 

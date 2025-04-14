@@ -186,15 +186,15 @@ def load_checkpoint(checkpoint_path, generator, mpn,discriminator, optimizer_g, 
     checkpoint = torch.load(checkpoint_path)
     generator.load_state_dict(checkpoint["generator_state_dict"])
     mpn.load_state_dict(checkpoint["mpn_state_dict"])  # ✅ 추가
-    discriminator.load_state_dict(checkpoint["discriminator1_state_dict"])
+    discriminator.load_state_dict(checkpoint["discriminator_state_dict"])
     optimizer_g.load_state_dict(checkpoint["optimizer_g_state_dict"])
-    optimizer_d.load_state_dict(checkpoint["optimizer_d1_state_dict"])
+    optimizer_d.load_state_dict(checkpoint["optimizer_d_state_dict"])
     epoch = checkpoint["epoch"]   # start_epoch 뱉을 때
     g_loss = checkpoint["g_loss"]
     g_l2_loss = checkpoint["g_l2_loss"]
     g_adv_loss = checkpoint["g_adv_loss"]
     d_loss = checkpoint["d_loss"]
-    return generator, discriminator, optimizer_g, optimizer_d, epoch, g_loss, g_l2_loss, g_adv_loss, d_loss
+    return generator, mpn, discriminator, optimizer_g, optimizer_d, epoch, g_loss, g_l2_loss, d_loss
 
 
 
@@ -301,7 +301,7 @@ def main():
     start_epoch = 0
 
     if checkpoint_path:
-        generator, discriminator, optimizer_g, optimizer_d, start_epoch, g_loss, g_l2_loss, d_loss \
+        generator, mpn,discriminator, optimizer_g, optimizer_d, start_epoch, g_loss, g_l2_loss, d_loss \
             = load_checkpoint(checkpoint_path, generator,mpn, discriminator, optimizer_g, optimizer_d)
 
 

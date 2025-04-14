@@ -231,7 +231,7 @@ def main():
 
     os.makedirs(save_dir, exist_ok=True)
 
-    checkpoint_path = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/VCNet_lr_0000100001_L1_0.8_noSEMTEXloss_beta_paper_fold1_colab_re/db1_train/checkpoint_epoch_38tar"  # 불러올 시 마지막 저장된 pth파일 경로 입력!!
+    checkpoint_path = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/VCNet_lr_0000100001_L1_0.8_noSEMTEXloss_beta_paper_fold1_colab_re/db1_train/checkpoint_epoch_38.tar"  # 불러올 시 마지막 저장된 pth파일 경로 입력!!
     # checkpoint_path = None
 
     # Parameters

@@ -185,8 +185,8 @@ def load_checkpoint(checkpoint_path, generator, optimizer_g):
     epoch = checkpoint["epoch"]
     g_loss = checkpoint["g_loss"]
     g_l2_loss = checkpoint["g_l2_loss"]
-    g_adv_loss = checkpoint["g_adv_loss"]
-    return generator, optimizer_g, epoch, g_loss, g_l2_loss, g_adv_loss
+  
+    return generator, optimizer_g, epoch, g_loss, g_l2_loss
 
 
 
@@ -281,7 +281,7 @@ def main():
     start_epoch = 0
 
     if checkpoint_path:
-        generator, optimizer_g, start_epoch, g_loss, g_l2_loss,g_adv_loss \
+        generator, optimizer_g, start_epoch, g_loss, g_l2_loss \
             = load_checkpoint(checkpoint_path, generator, optimizer_g)
 
 

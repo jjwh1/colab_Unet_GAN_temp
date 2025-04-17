@@ -219,7 +219,7 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 
 def main():
     # Paths
-    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Distance/spa-former_batch4_lr_0000500005_fold2_colab/db2_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Distance/spa-former_batch8_lr_0000500005_fold2_colab/db2_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     train_image_paths = '/content/dataset/reflection_random(50to1.7)_db2_224_trainset'  # List of input image paths
@@ -253,7 +253,7 @@ def main():
     checkpoint_path = None
 
     # Parameters
-    batch_size = 4
+    batch_size = 8
     # lr = 0.0002
     lr_g = 0.00005
     lr_d = 0.00005

@@ -238,7 +238,7 @@ def main():
     batch_size = 8
     lr_g = 0.00005
     lr_d = 0.00001
-    num_epochs = 400
+    num_epochs = 330
     lambda_adv = 0.1
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

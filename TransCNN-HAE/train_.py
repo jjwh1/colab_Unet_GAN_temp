@@ -166,7 +166,7 @@ def validate_epoch(generator, dataloader, device, writer, perceptualloss, epoch,
 #     g_adv_loss = checkpoint["g_adv_loss"]
 #     d_loss = checkpoint["d_loss"]
 #     return generator, discriminator, optimizer_g, optimizer_d, epoch, g_loss, g_l2_loss, g_adv_loss, d_loss
-def load_checkpoint(checkpoint_path, generator, optimizer_g, optimizer_d):
+def load_checkpoint(checkpoint_path, generator, optimizer_g):
     checkpoint = torch.load(checkpoint_path)
     generator.load_state_dict(checkpoint["generator_state_dict"])
 

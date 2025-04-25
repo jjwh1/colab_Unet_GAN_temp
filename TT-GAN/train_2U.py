@@ -336,7 +336,7 @@ def main():
     checkpoint_path = None
 
     # Parameters
-    batch_size = 2
+    batch_size = 1
     lr_g = 0.0001
     lr_d1 = 0.0001
     lr_d2 = 0.00001

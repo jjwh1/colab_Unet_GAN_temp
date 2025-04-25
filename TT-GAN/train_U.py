@@ -315,7 +315,7 @@ def load_checkpoint(checkpoint_path, generator, discriminator1, discriminator2, 
 
 def main():
 
-    save_dir = "/content/drive/MyDrive/inpaint_result/UPOL/TT_GAN_fold1_colab_re/db1_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/UPOL/TT_GAN_fold1_colab_rere/db1_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     train_image_paths = '/content/dataset/UPOL/reflection_random(50to1.7)_db1_224_trainset'  # List of input image paths
@@ -338,9 +338,9 @@ def main():
 
     # Parameters
     batch_size = 2
-    lr_g = 0.0001
+    lr_g = 0.0002
     lr_d1 = 0.0001
-    lr_d2 = 0.00001
+    lr_d2 = 0.0001
     num_epochs = 250
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

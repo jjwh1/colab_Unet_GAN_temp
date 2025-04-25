@@ -336,10 +336,10 @@ def main():
     checkpoint_path = None
 
     # Parameters
-    batch_size = 1
+    batch_size = 2
     lr_g = 0.0001
     lr_d1 = 0.0001
-    lr_d2 = 0.00001
+    lr_d2 = 0.00005
     num_epochs = 250
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

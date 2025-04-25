@@ -222,15 +222,15 @@ def main():
 
     os.makedirs(save_dir, exist_ok=True)
 
-    checkpoint_path = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/RFRNet_largemask_lr_0001_fold1_colab/db1_train/checkpoint_epoch_137.tar"  # 불러올 시 마지막 저장된 pth파일 경로 입력!!
-    # checkpoint_path = None
+    # checkpoint_path = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/RFRNet_largemask_lr_0001_fold1_colab/db1_train/checkpoint_epoch_137.tar"  # 불러올 시 마지막 저장된 pth파일 경로 입력!!
+    checkpoint_path = None
 
     # Parameters
     batch_size = 8
     # lr = 0.0002
     lr_g = 0.0001
 
-    num_epochs = 260
+    num_epochs = 250
     lambda_adv = 0.1
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -333,7 +333,7 @@ def main():
                 psnr, ssim
             ])
 
-        if epoch >= 30:
+        if epoch >= 60:
             # Save checkpoint
             torch.save({
                 "epoch": epoch + 1,

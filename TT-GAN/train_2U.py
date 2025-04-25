@@ -7,7 +7,7 @@ from dataset import InpaintDataset
 from torchvision import transforms, utils
 from torchmetrics import PeakSignalNoiseRatio, StructuralSimilarityIndexMeasure
 from torchmetrics.image import PeakSignalNoiseRatio, StructuralSimilarityIndexMeasure
-from pytorch_fid import fid_score
+
 import pandas as pd
 import os
 import matplotlib.pyplot as plt

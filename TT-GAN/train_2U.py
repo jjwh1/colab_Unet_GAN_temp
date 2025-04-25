@@ -321,12 +321,12 @@ def main():
     train_image_paths = '/content/dataset/UPOL/reflection_random(50to1.7)_db2_224_trainset'  # List of input image paths
     train_mask_paths = '/content/dataset/UPOL/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_trainset'  # List of mask paths
     train_gt_paths = "/content/dataset/UPOL/db2_224_for_gt_inpainting_trainset"  # List of ground truth paths
-    train_large_mask_paths = "/content/dataset/UPOL/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h3_w3.2_trainset"  # List of ground truth paths
+    train_large_mask_dir = "/content/dataset/UPOL/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h3_w3.2_trainset"  # List of ground truth paths
 
     val_image_paths = '/content/dataset/UPOL/reflection_random(50to1.7)_db2_224_validset'  # List of input image paths
     val_mask_paths = '/content/dataset/UPOL/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_validset'  # List of mask paths
     val_gt_paths = "/content/dataset/UPOL/db2_224_for_gt_inpainting_validset"  # List of ground truth paths
-    val_large_mask_paths = "/content/dataset/UPOL/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h3_w3.2_validset"  # List of ground truth paths
+    val_large_mask_dir = "/content/dataset/UPOL/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h3_w3.2_validset"  # List of ground truth paths
     
     os.makedirs(save_dir, exist_ok=True)
 

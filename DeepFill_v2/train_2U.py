@@ -266,7 +266,7 @@ def main():
     checkpoint_path = None
 
     # Parameters
-    batch_size = 4
+    batch_size = 8
     # lr = 0.0002
     lr_g = 0.0002
     lr_d = 0.0001

@@ -231,7 +231,7 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 
 def main():
     # Paths
-    save_dir = "/content/drive/MyDrive/inpaint_result/UPOL/DeepFillv2_lr_00010001_fold2_colab/db2_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/UPOL/DeepFillv2_lr_00010001_fold2_colab_re/db2_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     train_image_paths = '/content/dataset/UPOL/reflection_random(50to1.7)_db2_224_trainset'  # List of input image paths
@@ -245,7 +245,7 @@ def main():
     val_large_mask_paths = "/content/dataset/UPOL/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h3_w3.2_validset"  # List of ground truth paths
     
     results_path = os.path.join(save_dir, "metrics.csv")
-    
+
     # save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Distance/HiFill_fold2_colab/db2_train"
     # writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
@@ -266,11 +266,11 @@ def main():
     checkpoint_path = None
 
     # Parameters
-    batch_size = 8
+    batch_size = 4
     # lr = 0.0002
-    lr_g = 0.0001
+    lr_g = 0.0002
     lr_d = 0.0001
-    num_epochs = 250
+    num_epochs = 300
     lambda_adv = 0.1
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

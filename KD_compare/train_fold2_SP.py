@@ -277,13 +277,13 @@ def main():
     val_large_mask_paths = "/content/dataset/UPOL/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h3_w3.2_validset"  # List of ground truth paths
     
 
-    teacher_paths = '/content/dataset/UPOL_recog_T_pth/T2_checkpoint_epoch.tar'
+    teacher_paths = '/content/dataset/T2_checkpoint_epoch.tar'
     
 
     results_path = os.path.join(save_dir, "metrics.csv")
 
     # [추가] Feature L1 Loss를 위한 ConvNeXt 모델 로드
-    MODEL_PATH = "/content/dataset/UPOL_recog_T_pth/recog2_saved_model_epoch.pth"
+    MODEL_PATH = "/content/dataset/recog2_saved_model_epoch.pth"
 
     os.makedirs(save_dir, exist_ok=True)
 

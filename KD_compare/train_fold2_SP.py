@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from KD_models_nodil_4B_1024_st1b import UNetGenerator_T                       # Teacher model
-from KD_st_noMSA_1conv_lay123_4pool_st1b_3ch import UNetGenerator, Discriminator   # Student model
+from KD_st_noMSA_1conv_lay123_4pool_st1b import UNetGenerator, Discriminator   # Student model
 import adaptors                                                           # Adaptors
 from dataset import InpaintDataset
 from torchvision import transforms, utils
@@ -48,10 +48,10 @@ def train_gan_epoch(generator, generator_T, discriminator,adaptor_enc3,adaptor_b
     progress_bar = tqdm(dataloader, desc="Training", leave=False)
 
 
-    for concated, gts, masks, _ ,inputs,_ in progress_bar:
+    for inputs, gts, masks, _ ,_ ,largemasks in progress_bar:
         batch_size = inputs.size(0)  # 현재 배치 크기
         total_samples += batch_size  # 전체 샘플 수 누적
-        inputs, gts, masks ,concated= inputs.to(device), gts.to(device), masks.to(device),concated.to(device)
+        inputs, gts, masks, largemasks = inputs.to(device), gts.to(device), masks.to(device), largemasks.to(device)
 
         # Train Discriminator
         optimizer_d.zero_grad()
@@ -79,26 +79,26 @@ def train_gan_epoch(generator, generator_T, discriminator,adaptor_enc3,adaptor_b
 
         # ✅ Teacher 모델의 Output 및 Feature Map 가져오기 (Offline KD)
         with torch.no_grad():
-            teacher_output, teacher_enc1,teacher_enc3,teacher_bottleneck,teacher_dec1,teacher_dec3 = generator_T(concated)
+            teacher_output, teacher_enc1,teacher_enc3,teacher_bottleneck,teacher_dec1,teacher_dec3 = generator_T(inputs)
             # teacher_output, _,teacher_enc3,teacher_bottleneck,teacher_dec1,teacher_dec3 = generator_T(inputs)
 
         fake_output = discriminator(fake_images)
         g_loss_adv = criterion(fake_output, torch.ones_like(fake_output).to(device))  # Discriminator를 잘 속이는지에 대한 지표(loss)
         # g_loss_pixel = nn.MSELoss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
-        g_loss_pixel = 100 * nn.MSELoss()(fake_images , gts)
+        g_loss_pixel = nn.MSELoss()(fake_images * (1 - largemasks), gts * (1 - largemasks)) + 100 * nn.MSELoss()(fake_images * largemasks, gts * largemasks)
         # [추가] Feature L1 Loss 계산
         g_loss_recog = feature_l1_loss(fake_images, gts, recognition_model, device)
 
         # (4) KD Loss (Feature-Level & Output-Level)
-        kd_loss_output = 100 * nn.MSELoss()(fake_images , teacher_output)
+        kd_loss_output = nn.MSELoss()(fake_images * (1 - largemasks), teacher_output * (1 - largemasks)) + 100 * nn.MSELoss()(fake_images * largemasks, teacher_output * largemasks)
         kd_loss_enc1 = nn.MSELoss()(student_enc1, teacher_enc1)
       
-        kd_loss_enc3 = nn.MSELoss()(adaptor_enc3(student_enc3), teacher_enc3)
+        kd_loss_enc3 = adaptor_enc3(student_enc3, teacher_enc3)
      
-        kd_loss_bottleneck = nn.MSELoss()(adaptor_bottleneck(student_bottleneck), teacher_bottleneck)
+        kd_loss_bottleneck = adaptor_bottleneck(student_bottleneck, teacher_bottleneck)
         kd_loss_dec1 = nn.MSELoss()(student_dec1, teacher_dec1)
     
-        kd_loss_dec3 = nn.MSELoss()(adaptor_dec3(student_dec3), teacher_dec3)
+        kd_loss_dec3 = adaptor_dec3(student_dec3, teacher_dec3)
        
         
 
@@ -143,12 +143,12 @@ def validate_epoch(generator, generator_T, discriminator,adaptor_enc3,adaptor_bo
 
 
     with torch.no_grad():
-        for i, (concated, gts, masks, filenames, inputs, _) in enumerate(dataloader):
+        for i, (inputs, gts, masks, filenames, _, largemasks) in enumerate(dataloader):
             batch_size = inputs.size(0)  # 현재 배치 크기
             total_samples += batch_size  # 전체 샘플 수 누적
-            inputs, gts, masks,concated = inputs.to(device), gts.to(device), masks.to(device),concated.to(device)
+            inputs, gts, masks, largemasks = inputs.to(device), gts.to(device), masks.to(device), largemasks.to(device)
             fake_images, student_enc1,student_enc3,student_bottleneck,student_dec1,student_dec3 = generator(inputs)       # student 호출
-            teacher_output, teacher_enc1,teacher_enc3,teacher_bottleneck,teacher_dec1,teacher_dec3 = generator_T(concated)  # teacher 호출
+            teacher_output, teacher_enc1,teacher_enc3,teacher_bottleneck,teacher_dec1,teacher_dec3 = generator_T(inputs)  # teacher 호출
 
             # Save a few sample images
 
@@ -180,20 +180,20 @@ def validate_epoch(generator, generator_T, discriminator,adaptor_enc3,adaptor_bo
             g_loss_adv = criterion(discriminator(fake_images),
                                    torch.ones_like(discriminator(fake_images)).to(device))  # Discriminator를 잘 속이는지에 대한 지표(loss)
             # g_loss_pixel = nn.MSELoss()(fake_images, gts)  # Discriminator와 관계없이 gt image와 비교했을 때 잘 복원했는지에 대한 지표(loss)
-            g_loss_pixel = 100 * nn.MSELoss()(fake_images , gts)
+            g_loss_pixel = nn.MSELoss()(fake_images * (1 - largemasks), gts * (1 - largemasks)) + 100 * nn.MSELoss()(fake_images * largemasks, gts * largemasks)
 
             g_loss_recog = feature_l1_loss(fake_images, gts, recognition_model, device)
 
             # ✅ KD Loss (Feature-Level & Output-Level)
-            kd_loss_output = 100 * nn.MSELoss()(fake_images, teacher_output)
+            kd_loss_output = nn.MSELoss()(fake_images * (1 - largemasks), teacher_output * (1 - largemasks)) + 100 * nn.MSELoss()(fake_images * largemasks, teacher_output * largemasks)
             kd_loss_enc1 = nn.MSELoss()(student_enc1, teacher_enc1)
        
-            kd_loss_enc3 = nn.MSELoss()(adaptor_enc3(student_enc3), teacher_enc3)
+            kd_loss_enc3 = adaptor_enc3(student_enc3, teacher_enc3)
           
-            kd_loss_bottleneck = nn.MSELoss()(adaptor_bottleneck(student_bottleneck), teacher_bottleneck)
+            kd_loss_bottleneck = adaptor_bottleneck(student_bottleneck, teacher_bottleneck)
             kd_loss_dec1 = nn.MSELoss()(student_dec1, teacher_dec1)
           
-            kd_loss_dec3 = nn.MSELoss()(adaptor_dec3(student_dec3), teacher_dec3)
+            kd_loss_dec3 = adaptor_dec3(student_dec3, teacher_dec3)
             
             
             total_kd_loss = 2 * kd_loss_output  +kd_loss_enc1+kd_loss_enc3+kd_loss_bottleneck+kd_loss_dec1+kd_loss_dec3
@@ -263,25 +263,27 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 
 def main():
     # Paths
-    save_dir = "/scratch/x3112a05/JWH/result/CASIA_Lamp/ab_KD_PCatt_SRx_Lendecoder_ADx_en1de1_L2_total_5__S_4pool_T_nodil4B1024_fold2_kisti/db2_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/UPOL/KD_SP_Lendecoder_ADx_en1de1_L2_total_5__S_4pool_T_nodil4B1024_fold2_colab/db2_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
-    train_image_paths = '/scratch/x3112a05/JWH/dataset/CASIA_Iris_Lamp/reflection_random(50to1.7)_db2_224_trainset'  # List of input image paths
-    train_mask_paths = '/scratch/x3112a05/JWH/dataset/mask/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_trainset'  # List of mask paths
-    train_gt_paths = "/scratch/x3112a05/JWH/dataset/CASIA_Iris_Lamp/db2_224_for_gt_inpainting_trainset"  # List of ground truth paths
-    train_large_mask_paths = "/scratch/x3112a05/JWH/dataset/mask/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h2.8_w3_trainset"  # List of ground truth paths
+    train_image_paths = '/content/dataset/UPOL/reflection_random(50to1.7)_db2_224_trainset'  # List of input image paths
+    train_mask_paths = '/content/dataset/UPOL/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_trainset'  # List of mask paths
+    train_gt_paths = "/content/dataset/UPOL/db2_224_for_gt_inpainting_trainset"  # List of ground truth paths
+    train_large_mask_paths = "/content/dataset/UPOL/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h3_w3.2_trainset"  # List of ground truth paths
 
-    val_image_paths = '/scratch/x3112a05/JWH/dataset/CASIA_Iris_Lamp/reflection_random(50to1.7)_db2_224_validset'  # List of input image paths
-    val_mask_paths = '/scratch/x3112a05/JWH/dataset/mask/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_validset'  # List of mask paths
-    val_gt_paths = "/scratch/x3112a05/JWH/dataset/CASIA_Iris_Lamp/db2_224_for_gt_inpainting_validset"  # List of ground truth paths
-    val_large_mask_paths = "/scratch/x3112a05/JWH/dataset/mask/CASIA_Lamp/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h2.8_w3_validset"  # List of ground truth paths
+    val_image_paths = '/content/dataset/UPOL/reflection_random(50to1.7)_db2_224_validset'  # List of input image paths
+    val_mask_paths = '/content/dataset/UPOL/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_validset'  # List of mask paths
+    val_gt_paths = "/content/dataset/UPOL/db2_224_for_gt_inpainting_validset"  # List of ground truth paths
+    val_large_mask_paths = "/content/dataset/UPOL/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h3_w3.2_validset"  # List of ground truth paths
+    
 
-    teacher_paths = '/scratch/x3112a05/JWH/teacher_weight/CASIA_Lamp/db2_train_checkpoint_epoch_400.tar'
+    teacher_paths = '/content/dataset/UPOL_recog_T_pth/T2_checkpoint_epoch.tar'
+    
 
     results_path = os.path.join(save_dir, "metrics.csv")
 
     # [추가] Feature L1 Loss를 위한 ConvNeXt 모델 로드
-    MODEL_PATH = "/scratch/x3112a05/JWH/dataset/recognition_path/CASIA_Lamp/saved_model_epoch_100_db2.pth"
+    MODEL_PATH = "/content/dataset/UPOL_recog_T_pth/recog2_saved_model_epoch.pth"
 
     os.makedirs(save_dir, exist_ok=True)
 
@@ -315,10 +317,10 @@ def main():
     generator = UNetGenerator().to(device)
     generator_T = UNetGenerator_T().to(device)
     
-    adaptor_enc3 = adaptors.PCatt(128,256).to(device)
-    adaptor_bottleneck = adaptors.PCatt(256,1024).to(device)
+    adaptor_enc3 = adaptors.SP(128,256).to(device)
+    adaptor_bottleneck = adaptors.SP(256,1024).to(device)
     
-    adaptor_dec3 = adaptors.PCatt(128,256).to(device)
+    adaptor_dec3 = adaptors.SP(128,256).to(device)
   
     
 
@@ -417,7 +419,7 @@ def main():
                 psnr, ssim
             ])
 
-        if epoch >= 280:
+        if epoch >= 100:
             # Save checkpoint
             torch.save({
                 "epoch": epoch + 1,

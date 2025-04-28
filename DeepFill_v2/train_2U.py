@@ -270,7 +270,7 @@ def main():
     # lr = 0.0002
     lr_g = 0.0002
     lr_d = 0.0001
-    num_epochs = 300
+    num_epochs = 500
     lambda_adv = 0.1
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -263,7 +263,7 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 
 def main():
     # Paths
-    save_dir = "/content/drive/MyDrive/inpaint_result/UPOL/KD_PCatt_Lendecoder_ADx_en1de1_L2_total_5__S_4pool_T_nodil4B1024_fold2_colab/db2_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/UPOL/KD_PCatt_Lendecoder_ADx_en1de1_L2_total_5__S_4pool_T_nodil4B1024_fold2_colab_batch4/db2_train"
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     train_image_paths = '/content/dataset/UPOL/reflection_random(50to1.7)_db2_224_trainset'  # List of input image paths
@@ -291,7 +291,7 @@ def main():
     checkpoint_path = None
 
     # Parameters
-    batch_size = 8
+    batch_size = 4
     lr = 0.0002
     num_epochs = 500
     lambda_adv = 0.1

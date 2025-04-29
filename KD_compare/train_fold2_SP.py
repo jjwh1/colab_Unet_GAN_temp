@@ -275,7 +275,7 @@ def main():
     val_mask_paths = '/content/dataset/UPOL/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_validset'  # List of mask paths
     val_gt_paths = "/content/dataset/UPOL/db2_224_for_gt_inpainting_validset"  # List of ground truth paths
     val_large_mask_paths = "/content/dataset/UPOL/algorithm/450to50000_174x174padding_if_gac1_4000_algorithm/db2_test_layer12_0.3_only_mask_h3_w3.2_validset"  # List of ground truth paths
-    
+    # d
 
     teacher_paths = '/content/dataset/T2_checkpoint_epoch.tar'
     

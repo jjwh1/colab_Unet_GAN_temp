@@ -93,12 +93,12 @@ def train_gan_epoch(generator, generator_T, discriminator,adaptor_enc3,adaptor_b
         kd_loss_output = nn.MSELoss()(fake_images * (1 - largemasks), teacher_output * (1 - largemasks)) + 100 * nn.MSELoss()(fake_images * largemasks, teacher_output * largemasks)
         kd_loss_enc1 = nn.MSELoss()(student_enc1, teacher_enc1)
       
-        kd_loss_enc3 = adaptor_enc3(student_enc3, teacher_enc3)
+        kd_loss_enc3 = nn.MSELoss()(adaptor_enc3(student_enc3), teacher_enc3)
      
         kd_loss_bottleneck = adaptor_bottleneck(student_bottleneck, teacher_bottleneck)
         kd_loss_dec1 = nn.MSELoss()(student_dec1, teacher_dec1)
     
-        kd_loss_dec3 = adaptor_dec3(student_dec3, teacher_dec3)
+        kd_loss_dec3 = nn.MSELoss()(adaptor_dec3(student_dec3), teacher_dec3)
        
         
 
@@ -188,12 +188,12 @@ def validate_epoch(generator, generator_T, discriminator,adaptor_enc3,adaptor_bo
             kd_loss_output = nn.MSELoss()(fake_images * (1 - largemasks), teacher_output * (1 - largemasks)) + 100 * nn.MSELoss()(fake_images * largemasks, teacher_output * largemasks)
             kd_loss_enc1 = nn.MSELoss()(student_enc1, teacher_enc1)
        
-            kd_loss_enc3 = adaptor_enc3(student_enc3, teacher_enc3)
+            kd_loss_enc3 = nn.MSELoss()(adaptor_enc3(student_enc3), teacher_enc3)
           
             kd_loss_bottleneck = adaptor_bottleneck(student_bottleneck, teacher_bottleneck)
             kd_loss_dec1 = nn.MSELoss()(student_dec1, teacher_dec1)
           
-            kd_loss_dec3 = adaptor_dec3(student_dec3, teacher_dec3)
+            kd_loss_dec3 = nn.MSELoss()(adaptor_dec3(student_dec3), teacher_dec3)
             
             
             total_kd_loss = 10 * kd_loss_output  +5*(kd_loss_enc1+kd_loss_enc3+kd_loss_bottleneck+kd_loss_dec1+kd_loss_dec3)

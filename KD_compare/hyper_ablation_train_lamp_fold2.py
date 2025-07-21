@@ -190,7 +190,7 @@ def validate_epoch(generator, generator_T, discriminator,adaptor_enc3,adaptor_bo
        
             kd_loss_enc3 = nn.MSELoss()(adaptor_enc3(student_enc3), teacher_enc3)
           
-            kd_loss_bottleneck = adaptor_bottleneck(student_bottleneck, teacher_bottleneck)
+            kd_loss_bottleneck = nn.MSELoss()(adaptor_bottleneck(student_bottleneck), teacher_bottleneck)
             kd_loss_dec1 = nn.MSELoss()(student_dec1, teacher_dec1)
           
             kd_loss_dec3 = nn.MSELoss()(adaptor_dec3(student_dec3), teacher_dec3)

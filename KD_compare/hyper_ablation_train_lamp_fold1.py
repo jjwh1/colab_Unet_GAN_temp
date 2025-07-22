@@ -105,7 +105,7 @@ def train_gan_epoch(generator, generator_T, discriminator,adaptor_enc3,adaptor_b
         total_kd_loss = 10 * kd_loss_output  +5*(kd_loss_enc1+kd_loss_enc3+ kd_loss_bottleneck+kd_loss_dec1+kd_loss_dec3)
         # total_kd_loss = kd_loss_enc1+kd_loss_enc2+kd_loss_enc3+kd_loss_enc4+kd_loss_bottleneck
 
-        g_loss = g_loss_pixel + lambda_adv * g_loss_adv + lambda_adv *g_loss_recog + 0.1* total_kd_loss
+        g_loss = g_loss_pixel + lambda_adv * g_loss_adv + 1 *g_loss_recog + 1* total_kd_loss
         g_loss.backward()
         optimizer_g.step()
 
@@ -198,7 +198,7 @@ def validate_epoch(generator, generator_T, discriminator,adaptor_enc3,adaptor_bo
             
             total_kd_loss = 10 * kd_loss_output  +5*(kd_loss_enc1+kd_loss_enc3+kd_loss_bottleneck+kd_loss_dec1+kd_loss_dec3)
             # total_kd_loss = kd_loss_enc1+kd_loss_enc2+kd_loss_enc3+kd_loss_enc4+ kd_loss_bottleneck
-            g_loss = g_loss_pixel + lambda_adv * g_loss_adv + lambda_adv * g_loss_recog + 0.1*total_kd_loss
+            g_loss = g_loss_pixel + lambda_adv * g_loss_adv + 1 * g_loss_recog + 1*total_kd_loss
 
             real_output = discriminator(gts)  # dis의 output: (batch_size, 1) 형태의 출력 텐서
             # 네트워크에서 생성된 값이 아니라 데이터셋에서 직접 가져온 Ground Truth 이미지이기 때문에 이 데이터는 모델의 그래디언트 업데이트에 영향을 주는 학습 파라미터와 연결된 계산 그래프에 속하지 않음
@@ -263,10 +263,10 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 
 def main():
     # Paths
-    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/hyper_ablation_0.1_0.1_0.1/db1_train"
+    # save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/hyper_ablation_0.1_0.1_0.1/db1_train"
     # save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/hyper_ablation_1_0.1_0.1/db1_train"
     # save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/hyper_ablation_0.1_1_0.1/db1_train"
-    # save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/hyper_ablation_0.1_1_1/db1_train"
+    save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/hyper_ablation_0.1_1_1/db1_train"
 
     writer = SummaryWriter(os.path.join(save_dir, 'SR_Stage_4%s' % datetime.now().strftime("%Y%m%d-%H%M%S")))
 

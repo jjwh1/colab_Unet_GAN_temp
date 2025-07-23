@@ -264,7 +264,6 @@ def load_checkpoint(checkpoint_path, generator, discriminator, optimizer_g, opti
 def main():
     # Paths
     
-    
     save_dir = "/content/drive/MyDrive/inpaint_result/CASIA_Lamp/hyper_ablation_0.1_1_1/db2_train"
     
 
